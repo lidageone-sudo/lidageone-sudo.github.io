@@ -1,222 +1,202 @@
-/* Main App Logic */
+/* AI 导航站 前端逻辑 */
+// 数据结构约定：data/models.json 返回数组，每项：
+// { id, name, description, category, license, stars, updated, tags:[], links:{ homepage, repo, doc, demo }, score?, vendor?, size?, params?, type? }
+
 const state = {
-  books: [],
+  all: [],
   filtered: [],
-  favorites: new Set(),
+  categories: [],
+  licenses: [],
   activeTags: new Set(),
-  onlyFavorites: false,
-  sort: 'title',
-  search: ''
+  favorites: new Set(JSON.parse(localStorage.getItem('aiNavFav')||'[]')),
+  query: '',
+  sort: 'score',
+  category: 'ALL',
+  license: 'ALL',
+  layout: localStorage.getItem('aiNavLayout')||'normal',
+  theme: localStorage.getItem('aiNavTheme')||'light'
 };
+
+document.documentElement.dataset.theme = state.theme;
+if(state.layout==='compact') document.body.classList.add('compact');
 
 const els = {
-  list: document.getElementById('bookList'),
-  template: document.getElementById('bookCardTemplate'),
+  resultArea: document.getElementById('resultArea'),
+  searchInput: document.getElementById('searchInput'),
+  clearSearch: document.getElementById('clearSearch'),
+  categorySelect: document.getElementById('categorySelect'),
+  licenseSelect: document.getElementById('licenseSelect'),
+  sortSelect: document.getElementById('sortSelect'),
   tagBar: document.getElementById('tagBar'),
-  search: document.getElementById('searchInput'),
-  sort: document.getElementById('sortSelect'),
-  favToggle: document.getElementById('toggleFavorites'),
-  themeToggle: document.getElementById('themeToggle'),
-  detailPanel: document.getElementById('detailPanel'),
-  detailContent: document.getElementById('detailContent'),
-  closeDetail: document.getElementById('closeDetail'),
-  exportFavorites: document.getElementById('exportFavorites'),
-  emptyHint: document.querySelector('.empty-hint')
+  toggleLayout: document.getElementById('toggleLayout'),
+  toggleTheme: document.getElementById('toggleTheme'),
+  sidePanel: document.getElementById('sidePanel'),
+  panelBody: document.getElementById('panelBody'),
+  overlay: document.getElementById('overlay'),
+  closePanel: document.getElementById('closePanel'),
+  dbCount: document.getElementById('dbCount'),
+  cardTpl: document.getElementById('cardTpl'),
 };
 
-function loadFavorites() {
-  try {
-    const raw = localStorage.getItem('myLibraryFavorites');
-    if (raw) JSON.parse(raw).forEach(id => state.favorites.add(id));
-  } catch (e) { console.warn('fav load fail', e); }
-}
-function saveFavorites() {
-  localStorage.setItem('myLibraryFavorites', JSON.stringify([...state.favorites]));
-}
-
-async function loadBooks() {
-  const res = await fetch('data/books.json?_=' + Date.now());
-  if (!res.ok) throw new Error('加载 books.json 失败');
+/* ---------- 数据加载 ---------- */
+async function loadData(){
+  const res = await fetch('data/models.json?_=' + Date.now());
   const data = await res.json();
-  state.books = data;
+  state.all = data.map(enrich);
+  buildFacetOptions();
+  syncFilter();
+  render();
 }
 
-function buildTagCloud() {
-  const freq = new Map();
-  state.books.forEach(b => (b.tags||[]).forEach(t => freq.set(t, (freq.get(t)||0)+1)));
-  const tags = [...freq.entries()].sort((a,b)=>b[1]-a[1]).slice(0,40).map(v=>v[0]);
-  els.tagBar.innerHTML = '';
-  tags.forEach(tag => {
-    const btn = document.createElement('button');
-    btn.className = 'tag';
-    btn.textContent = tag;
-    btn.dataset.tag = tag;
-    btn.addEventListener('click',()=>{toggleTag(tag);});
-    els.tagBar.appendChild(btn);
-  });
+function enrich(item){
+  // 计算初步推荐得分 (可继续调权重)
+  const stars = item.stars || 0;
+  const updated = item.updated ? (Date.now() - new Date(item.updated).getTime())/86400000 : 999;
+  const freshness = Math.max(0, 1 - Math.min(updated/180,1));
+  item.score = (stars?Math.log10(stars+10):0) * 0.6 + freshness * 0.4 + (item.tags?.length||0)*0.05;
+  return item;
 }
 
-function toggleTag(tag){
-  if(state.activeTags.has(tag)) state.activeTags.delete(tag); else state.activeTags.add(tag);
-  updateTagUI();
-  applyFilters();
-}
-
-function updateTagUI(){
-  [...els.tagBar.querySelectorAll('.tag')].forEach(e => {
-    e.classList.toggle('active', state.activeTags.has(e.dataset.tag));
-  });
-}
-
-function applyFilters(){
-  const search = state.search.trim().toLowerCase();
-  const tags = state.activeTags;
-  const onlyFav = state.onlyFavorites;
-  let arr = state.books.filter(b => {
-    if (onlyFav && !state.favorites.has(b.id)) return false;
-    if (tags.size && !(b.tags||[]).every(t => tags.has(t)) ) {
-      // tags 采用 AND? 这里使用包含全部选中标签
-      for (const t of tags){ if(!(b.tags||[]).includes(t)) return false; }
+/* ---------- 过滤与搜索 ---------- */
+function syncFilter(){
+  const q = state.query.trim().toLowerCase();
+  const usePinyin = /[a-z]/.test(q) && /[\u4e00-\u9fa5]/.test(JSON.stringify(state.all));
+  state.filtered = state.all.filter(it=>{
+    if(state.category!=='ALL' && it.category!==state.category) return false;
+    if(state.license!=='ALL' && it.license!==state.license) return false;
+    if(state.activeTags.size){
+      if(!it.tags || ![...state.activeTags].every(t=>it.tags.includes(t))) return false;
     }
-    if (search){
-      const hay = [b.title,b.authors?.join(' '),(b.tags||[]).join(' ')].join(' ').toLowerCase();
-      if(!hay.includes(search)) return false;
+    if(q){
+      const hay = (it.name+' '+(it.description||'')+' '+(it.tags||[]).join(' ')).toLowerCase();
+      if(!hay.includes(q)){
+        if(usePinyin){
+          // 简单拼音首字母匹配（预处理缓存）
+          if(!it._pinyin){ it._pinyin = toInitials(it.name + ' ' + (it.tags||[]).join(' ')); }
+          if(!it._pinyin.includes(q)) return false;
+        } else return false;
+      }
     }
     return true;
   });
-  // sort
-  arr.sort((a,b)=>{
-    if(state.sort==='title') return a.title.localeCompare(b.title,'zh');
-    if(state.sort==='author') return (a.authors?.[0]||'').localeCompare(b.authors?.[0]||'','zh');
-    if(state.sort==='year') return (b.year||0)-(a.year||0);
-    return 0;
-  });
-  state.filtered = arr;
-  renderList();
+  applySort();
 }
 
-function renderList(){
-  els.list.querySelectorAll('.book-card').forEach(n=>n.remove());
+function applySort(){
+  const s = state.sort;
+  state.filtered.sort((a,b)=>{
+    if(s==='name') return a.name.localeCompare(b.name,'zh');
+    if(s==='recent') return new Date(b.updated||0)-new Date(a.updated||0);
+    if(s==='stars') return (b.stars||0)-(a.stars||0);
+    return (b.score||0)-(a.score||0);
+  });
+}
+
+/* ---------- 构建筛选项 ---------- */
+function buildFacetOptions(){
+  state.categories = Array.from(new Set(state.all.map(i=>i.category).filter(Boolean))).sort();
+  state.licenses = Array.from(new Set(state.all.map(i=>i.license).filter(Boolean))).sort();
+  els.categorySelect.innerHTML = '<option value="ALL">全部分类</option>'+ state.categories.map(c=>`<option value="${c}">${c}</option>`).join('');
+  els.licenseSelect.innerHTML = '<option value="ALL">全部许可证</option>'+ state.licenses.map(c=>`<option value="${c}">${c}</option>`).join('');
+  const tagFreq = new Map();
+  state.all.forEach(i=> (i.tags||[]).forEach(t=> tagFreq.set(t,(tagFreq.get(t)||0)+1)) );
+  const top = [...tagFreq.entries()].sort((a,b)=>b[1]-a[1]).slice(0,40).map(([t,n])=>({t,n}));
+  els.tagBar.innerHTML = top.map(o=>`<div class="tag" data-tag="${o.t}" title="${o.n} 项">${o.t}</div>`).join('');
+  els.dbCount.textContent = '· '+state.all.length+' 项';
+}
+
+/* ---------- 渲染结果 ---------- */
+function render(){
+  const wrap = els.resultArea;
+  wrap.innerHTML='';
   if(!state.filtered.length){
-    els.emptyHint.hidden = false;
+    wrap.innerHTML = '<div class="empty">暂无结果，尝试修改搜索或筛选。</div>';
     return;
   }
-  els.emptyHint.hidden = true;
   const frag = document.createDocumentFragment();
-  state.filtered.forEach(b => {
-    const node = els.template.content.firstElementChild.cloneNode(true);
-    node.dataset.id = b.id;
-    const img = node.querySelector('img');
-    if(b.cover){ img.src = b.cover; } else { img.alt = '无封面'; }
-    node.querySelector('.title').textContent = b.title;
-    node.querySelector('.authors').textContent = (b.authors||[]).join(', ');
-    node.querySelector('.meta').textContent = [b.year, b.language].filter(Boolean).join(' · ');
-    const tagsWrap = node.querySelector('.tags');
-    (b.tags||[]).forEach(t=>{const span=document.createElement('span');span.className='t';span.textContent=t;tagsWrap.appendChild(span);});
-    const favBtn = node.querySelector('.fav-btn');
-    if(state.favorites.has(b.id)) favBtn.classList.add('active'), favBtn.textContent = '★'; else favBtn.textContent='☆';
-    favBtn.addEventListener('click',e=>{e.stopPropagation();toggleFavorite(b.id,favBtn);});
-    node.addEventListener('click',()=>openDetail(b.id));
+  for(const item of state.filtered){
+    const node = buildCard(item);
     frag.appendChild(node);
-  });
-  els.list.appendChild(frag);
-}
-
-function toggleFavorite(id, btn){
-  if(state.favorites.has(id)) state.favorites.delete(id); else state.favorites.add(id);
-  saveFavorites();
-  if(btn){btn.classList.toggle('active');btn.textContent = state.favorites.has(id)?'★':'☆';}
-}
-
-function openDetail(id){
-  const book = state.books.find(b=>b.id===id);
-  if(!book) return;
-  els.detailPanel.hidden = false;
-  const html = `
-    <h2>${book.title}</h2>
-    <div class="actions">
-      <button id="detailFav" class="btn ${state.favorites.has(book.id)?'active':''}">${state.favorites.has(book.id)?'已收藏':'收藏'}</button>
-      ${book.link?`<a class="btn" rel="noopener" target="_blank" href="${book.link}">访问链接</a>`:''}
-      <button id="copyLink" class="btn">复制链接</button>
-    </div>
-    <p class="meta-line"><strong>作者:</strong> ${(book.authors||[]).join(', ')||'—'} ${book.year?` | <strong>年份:</strong> ${book.year}`:''} ${book.isbn?` | <strong>ISBN:</strong> ${book.isbn}`:''}</p>
-    <div class="badges">${(book.tags||[]).map(t=>`<span class="badge">${t}</span>`).join('')}</div>
-    <div class="desc">${(book.description||'').replace(/</g,'&lt;')}</div>
-  `;
-  els.detailContent.innerHTML = html;
-  history.replaceState(null,'',`#book/${encodeURIComponent(id)}`);
-  document.getElementById('detailFav').addEventListener('click',()=>{
-    toggleFavorite(book.id, document.getElementById('detailFav'));
-    document.getElementById('detailFav').textContent = state.favorites.has(book.id)?'已收藏':'收藏';
-    document.getElementById('detailFav').classList.toggle('active', state.favorites.has(book.id));
-    // sync list star if open
-    const cardBtn = els.list.querySelector(`.book-card[data-id="${CSS.escape(book.id)}"] .fav-btn`);
-    if(cardBtn){cardBtn.classList.toggle('active', state.favorites.has(book.id));cardBtn.textContent=state.favorites.has(book.id)?'★':'☆';}
-  });
-  document.getElementById('copyLink').addEventListener('click',()=>{
-    navigator.clipboard.writeText(location.href).then(()=>{
-      document.getElementById('copyLink').textContent='已复制';
-      setTimeout(()=>{const btn=document.getElementById('copyLink');if(btn) btn.textContent='复制链接';},1600);
-    });
-  });
-  setTimeout(()=>{els.detailContent.focus();},50);
-}
-
-function closeDetail(){
-  els.detailPanel.hidden = true;
-  if(location.hash.startsWith('#book/')) history.replaceState(null,'','#');
-}
-
-function handleHash(){
-  if(location.hash.startsWith('#book/')){
-    const id = decodeURIComponent(location.hash.split('/')[1]||'');
-    openDetail(id);
-  } else {
-    closeDetail();
   }
+  wrap.appendChild(frag);
 }
 
-function exportFavorites(){
-  const favBooks = state.books.filter(b=>state.favorites.has(b.id));
-  const blob = new Blob([JSON.stringify(favBooks,null,2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'favorites.json'; a.click();
-  URL.revokeObjectURL(url);
+function buildCard(item){
+  const tpl = els.cardTpl.content.firstElementChild.cloneNode(true);
+  tpl.dataset.id = item.id;
+  tpl.querySelector('.title').textContent = item.name;
+  const desc = tpl.querySelector('.desc');
+  desc.textContent = item.description || '';
+  tpl.querySelector('.badge-cat').textContent = item.category || '其它';
+  tpl.querySelector('.badge-license').textContent = item.license || '-';
+  const meta = [];
+  if(item.stars) meta.push('★ '+shortNumber(item.stars));
+  if(item.updated) meta.push('更新 '+item.updated.split('T')[0]);
+  if(item.params) meta.push('参数 '+item.params);
+  tpl.querySelector('.meta-line').textContent = meta.join(' · ');
+  const tagsBox = tpl.querySelector('.tags');
+  (item.tags||[]).forEach(t=>{
+    const span = document.createElement('span');
+    span.className='t'; span.textContent=t; span.dataset.tag=t;
+    tagsBox.appendChild(span);
+  });
+  const favBtn = tpl.querySelector('.btn-fav');
+  if(state.favorites.has(item.id)) favBtn.classList.add('faved');
+  favBtn.addEventListener('click', e=>{
+    e.stopPropagation();
+    if(state.favorites.has(item.id)) state.favorites.delete(item.id); else state.favorites.add(item.id);
+    favBtn.classList.toggle('faved');
+    localStorage.setItem('aiNavFav', JSON.stringify([...state.favorites]));
+  });
+  tpl.addEventListener('click', ()=> openPanel(item));
+  return tpl;
 }
 
-function toggleTheme(){
-  const html = document.documentElement;
-  const current = html.getAttribute('data-theme')==='dark'?'dark':'light';
-  const next = current==='dark'?'light':'dark';
-  html.setAttribute('data-theme', next);
-  localStorage.setItem('myLibraryTheme', next);
+/* ---------- 详情面板 ---------- */
+function openPanel(item){
+  els.sidePanel.classList.add('active');
+  els.overlay.hidden=false;
+  els.sidePanel.setAttribute('aria-hidden','false');
+  const links = [];
+  if(item.links){
+    for(const k of Object.keys(item.links)){
+      if(item.links[k]) links.push(`<a href="${item.links[k]}" target="_blank" rel="noopener">${k}</a>`);
+    }
+  }
+  els.panelBody.innerHTML = `
+    <h2>${escapeHtml(item.name)}</h2>
+    <p>${escapeHtml(item.description||'')}</p>
+    <div class="sec">基本信息</div>
+    <div class="line">分类：<code>${escapeHtml(item.category||'-')}</code> 许可证：<code>${escapeHtml(item.license||'-')}</code></div>
+    <div class="line">Tags：${(item.tags||[]).map(t=>`<code>${escapeHtml(t)}</code>`).join(' ')||'-'}</div>
+    <div class="line">Stars：<code>${item.stars?shortNumber(item.stars):'-'}</code> 更新时间：<code>${item.updated?item.updated.split('T')[0]:'-'}</code></div>
+    ${(item.vendor||item.size||item.params)?`<div class="line">供应商：<code>${escapeHtml(item.vendor||'-')}</code> 参数规模：<code>${escapeHtml(item.params||'-')}</code> 大小：<code>${escapeHtml(item.size||'-')}</code></div>`:''}
+    <div class="sec">链接</div>
+    <div class="links">${links.join('')||'<span style="opacity:.6">无</span>'}</div>
+  `;
 }
-function loadTheme(){
-  const t = localStorage.getItem('myLibraryTheme');
-  if(t) document.documentElement.setAttribute('data-theme', t);
-}
-
-function initEvents(){
-  let searchTimer; els.search.addEventListener('input', e=>{clearTimeout(searchTimer); searchTimer=setTimeout(()=>{state.search=e.target.value;applyFilters();},260);});
-  els.sort.addEventListener('change', e=>{state.sort=e.target.value;applyFilters();});
-  els.favToggle.addEventListener('click',()=>{state.onlyFavorites=!state.onlyFavorites;els.favToggle.setAttribute('aria-pressed', state.onlyFavorites);els.favToggle.classList.toggle('active', state.onlyFavorites);applyFilters();});
-  els.themeToggle.addEventListener('click', toggleTheme);
-  els.closeDetail.addEventListener('click', closeDetail);
-  window.addEventListener('hashchange', handleHash);
-  els.exportFavorites.addEventListener('click', e=>{e.preventDefault();exportFavorites();});
-  document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !els.detailPanel.hidden) closeDetail(); });
-}
-
-async function bootstrap(){
-  loadTheme();
-  loadFavorites();
-  await loadBooks();
-  buildTagCloud();
-  applyFilters();
-  handleHash();
-  initEvents();
-  document.getElementById('yearSpan').textContent = new Date().getFullYear();
+function closePanel(){
+  els.sidePanel.classList.remove('active');
+  els.overlay.hidden=true;
+  els.sidePanel.setAttribute('aria-hidden','true');
 }
 
-bootstrap();
+/* ---------- 工具函数 ---------- */
+function escapeHtml(s){ return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+function shortNumber(n){ if(n>=1e6) return (n/1e6).toFixed(1)+'M'; if(n>=1e3) return (n/1e3).toFixed(1)+'k'; return n; }
+function toInitials(str){ return str.split(/\s+/).map(w=> w[0] ? w[0].toLowerCase() : '').join(''); }
+
+/* ---------- 事件绑定 ---------- */
+els.searchInput.addEventListener('input', ()=>{ state.query=els.searchInput.value; syncFilter(); render(); });
+els.clearSearch.addEventListener('click', ()=>{ els.searchInput.value=''; state.query=''; syncFilter(); render(); els.searchInput.focus(); });
+els.categorySelect.addEventListener('change', ()=>{ state.category=els.categorySelect.value; syncFilter(); render(); });
+els.licenseSelect.addEventListener('change', ()=>{ state.license=els.licenseSelect.value; syncFilter(); render(); });
+els.sortSelect.addEventListener('change', ()=>{ state.sort=els.sortSelect.value; applySort(); render(); });
+els.toggleLayout.addEventListener('click', ()=>{ state.layout = state.layout==='normal'?'compact':'normal'; document.body.classList.toggle('compact', state.layout==='compact'); localStorage.setItem('aiNavLayout', state.layout); });
+els.toggleTheme.addEventListener('click', ()=>{ state.theme = state.theme==='light'?'dark':'light'; document.documentElement.dataset.theme=state.theme; localStorage.setItem('aiNavTheme', state.theme); });
+els.tagBar.addEventListener('click', e=>{ const tag = e.target.closest('.tag'); if(!tag) return; const t=tag.dataset.tag; if(state.activeTags.has(t)) state.activeTags.delete(t); else state.activeTags.add(t); tag.classList.toggle('active'); syncFilter(); render(); });
+els.closePanel.addEventListener('click', closePanel); els.overlay.addEventListener('click', closePanel);
+window.addEventListener('keydown', e=>{ if(e.key==='Escape') closePanel(); });
+
+/* ---------- 初始化 ---------- */
+loadData();

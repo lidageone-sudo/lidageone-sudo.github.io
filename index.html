@@ -3,47 +3,54 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>沉浸式阅读器</title>
-  <meta name="description" content="本地 TXT / EPUB 沉浸式阅读器，支持中文编码自动识别" />
-  <link rel="stylesheet" href="assets/css/reader.css" />
+  <title>AI 导航站 | 全部模型与应用一站式索引</title>
+  <meta name="description" content="AI 导航：大模型、开源模型、推理框架、工具、应用、插件与学习资源一站式聚合。" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2 2 7l10 5 10-5-10-5v10'/%3E%3Cpath d='m2 17 10 5 10-5'/%3E%3Cpath d='M2 12l10 5 10-5'/%3E%3C/svg%3E" />
 </head>
 <body>
   <header class="top-bar">
-    <div class="left-group">
-      <label class="import-btn">导入文件<input type="file" id="fileInput" multiple accept=".txt,.epub" /></label>
-      <select id="encodingSelect" title="文本编码">
-        <option value="auto">自动编码</option>
-        <option value="utf-8">UTF-8</option>
-        <option value="gb18030">GB18030</option>
-      </select>
-      <span class="divider"></span>
-      <button id="prevChapter" class="btn sm" title="上一章">◀</button>
-      <select id="chapterSelect" class="chapter-select"></select>
-      <button id="nextChapter" class="btn sm" title="下一章">▶</button>
-      <span class="divider"></span>
-      <button id="fontDec" class="btn sm">A-</button>
-      <span class="font-ind" id="fontSizeInd">16</span>
-      <button id="fontInc" class="btn sm">A+</button>
-      <button id="resetPos" class="btn sm" title="回到顶部">↺</button>
+    <div class="logo">AI 导航站 <span id="dbCount" class="muted"></span></div>
+    <div class="search-wrap">
+      <input id="searchInput" type="search" placeholder="搜索：模型 / 应用 / 关键词 (支持拼音首字母)" autocomplete="off" />
+      <button id="clearSearch" title="清除">✕</button>
     </div>
-    <div class="right-group">
-      <button id="themeSwitch" class="btn sm" title="切换主题">主题</button>
-      <button id="toggleShelf" class="btn sm" aria-pressed="true">书架</button>
-      <button id="toggleReader" class="btn sm" aria-pressed="false">阅读</button>
+    <div class="actions">
+      <select id="categorySelect" title="按主类过滤"></select>
+      <select id="licenseSelect" title="按许可证"></select>
+      <select id="sortSelect" title="排序">
+        <option value="score">相关度 / 推荐</option>
+        <option value="name">名称 A→Z</option>
+        <option value="recent">最近更新</option>
+        <option value="stars">Stars</option>
+      </select>
+      <button id="toggleLayout" class="btn" title="切换布局">🔳</button>
+      <button id="toggleTheme" class="btn" title="主题">🌗</button>
     </div>
   </header>
-  <div id="loadBar" class="load-bar" hidden><div class="load-fill" id="loadFill"></div><span id="loadText" class="load-text"></span></div>
-  <main class="main-area">
-    <aside id="shelfView" class="shelf-pane active">
-      <div class="shelf-scroll" id="shelfGrid"></div>
-      <div class="hint">选择 txt / epub 文件（本地解析，不上传）。大文件分块读取可能需要时间。</div>
-    </aside>
-    <section id="readerView" class="reader-pane" hidden>
-      <article id="pageContainer" class="page" tabindex="0"></article>
-      <div class="progress-line"><div id="progressFill" class="progress-inner"></div></div>
-    </section>
-  </main>
-  <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
-  <script src="assets/js/reader.js" type="module"></script>
+  <nav class="tag-bar" id="tagBar"></nav>
+  <main class="content" id="resultArea" aria-live="polite"></main>
+  <aside class="side-panel" id="sidePanel" aria-hidden="true">
+    <button class="close-panel" id="closePanel" aria-label="关闭">✕</button>
+    <div id="panelBody" class="panel-body"></div>
+  </aside>
+  <div id="overlay" class="overlay" hidden></div>
+  <footer class="site-footer">
+    <span>数据本地静态聚合，可自行扩展 data/models.json · <a href="https://github.com/lidageone-sudo/lidageone-sudo.github.io" target="_blank" rel="noopener">GitHub</a></span>
+  </footer>
+  <template id="cardTpl">
+    <article class="card" data-id="">
+      <div class="card-head">
+        <span class="badge badge-cat"></span>
+        <span class="badge badge-license"></span>
+        <button class="btn-mini btn-fav" title="收藏">☆</button>
+      </div>
+      <h3 class="title"></h3>
+      <p class="desc"></p>
+      <div class="meta-line"></div>
+      <div class="tags"></div>
+    </article>
+  </template>
+  <script type="module" src="assets/js/app.js"></script>
 </body>
 </html>
