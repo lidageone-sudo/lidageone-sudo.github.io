@@ -2,51 +2,47 @@
 <html lang="zh-CN" data-theme="light">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>复古阅读器 Retro Reader</title>
-  <meta name="description" content="iPhone 4s 风格拟物化本地电子书阅读器" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>沉浸式阅读器</title>
+  <meta name="description" content="本地 TXT / EPUB 沉浸式阅读器，支持中文编码自动识别" />
   <link rel="stylesheet" href="assets/css/reader.css" />
 </head>
 <body>
-  <div class="phone-frame">
-    <div class="status-bar">
-      <span class="sb-time" id="sbTime"></span>
-      <span class="sb-battery" title="模拟电量">🔋95%</span>
+  <header class="top-bar">
+    <div class="left-group">
+      <label class="import-btn">导入文件<input type="file" id="fileInput" multiple accept=".txt,.epub" /></label>
+      <select id="encodingSelect" title="文本编码">
+        <option value="auto">自动编码</option>
+        <option value="utf-8">UTF-8</option>
+        <option value="gb18030">GB18030</option>
+      </select>
+      <span class="divider"></span>
+      <button id="prevChapter" class="btn sm" title="上一章">◀</button>
+      <select id="chapterSelect" class="chapter-select"></select>
+      <button id="nextChapter" class="btn sm" title="下一章">▶</button>
+      <span class="divider"></span>
+      <button id="fontDec" class="btn sm">A-</button>
+      <span class="font-ind" id="fontSizeInd">16</span>
+      <button id="fontInc" class="btn sm">A+</button>
+      <button id="resetPos" class="btn sm" title="回到顶部">↺</button>
     </div>
-    <header class="leather-bar">
-      <h1 class="app-title">书架</h1>
-      <div class="toolbar">
-        <label class="file-btn">导入
-          <input type="file" id="fileInput" accept=".txt,.epub" />
-        </label>
-        <button id="toggleShelf" class="tbtn" aria-pressed="true">书架</button>
-        <button id="toggleReader" class="tbtn" aria-pressed="false">阅读</button>
-        <button id="themeSwitch" class="tbtn" title="主题">主题</button>
-      </div>
-    </header>
-    <main class="screen">
-      <section id="shelfView" class="shelf-view active">
-        <div id="shelfGrid" class="shelf-grid"></div>
-        <div class="hint">点击“导入”选择 txt / epub（文件仅在本地浏览器中处理，不会上传）。</div>
-      </section>
-      <section id="readerView" class="reader-view" hidden>
-        <div class="page-toolbar">
-          <button id="prevChapter" class="mini">◀</button>
-          <select id="chapterSelect"></select>
-          <button id="nextChapter" class="mini">▶</button>
-          <button id="fontDec" class="mini">A-</button>
-          <span class="font-size-ind" id="fontSizeInd">16</span>
-          <button id="fontInc" class="mini">A+</button>
-          <button id="resetPos" class="mini" title="回到顶部">↺</button>
-        </div>
-        <div id="pageContainer" class="page-container" tabindex="0"></div>
-        <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
-      </section>
-    </main>
-    <footer class="home-btn-bar">
-      <button class="home-btn" id="homeBtn" aria-label="返回书架"></button>
-    </footer>
-  </div>
+    <div class="right-group">
+      <button id="themeSwitch" class="btn sm" title="切换主题">主题</button>
+      <button id="toggleShelf" class="btn sm" aria-pressed="true">书架</button>
+      <button id="toggleReader" class="btn sm" aria-pressed="false">阅读</button>
+    </div>
+  </header>
+  <div id="loadBar" class="load-bar" hidden><div class="load-fill" id="loadFill"></div><span id="loadText" class="load-text"></span></div>
+  <main class="main-area">
+    <aside id="shelfView" class="shelf-pane active">
+      <div class="shelf-scroll" id="shelfGrid"></div>
+      <div class="hint">选择 txt / epub 文件（本地解析，不上传）。大文件分块读取可能需要时间。</div>
+    </aside>
+    <section id="readerView" class="reader-pane" hidden>
+      <article id="pageContainer" class="page" tabindex="0"></article>
+      <div class="progress-line"><div id="progressFill" class="progress-inner"></div></div>
+    </section>
+  </main>
   <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
   <script src="assets/js/reader.js" type="module"></script>
 </body>
