@@ -1,0 +1,47 @@
+[
+  {
+    "id": "pride-and-prejudice",
+    "title": "Pride and Prejudice",
+    "authors": ["Jane Austen"],
+    "year": 1813,
+    "language": "en",
+    "tags": ["classic","novel","romance"],
+    "isbn": "9780141439518",
+    "link": "https://www.gutenberg.org/ebooks/1342",
+    "description": "A classic novel about manners, upbringing, morality, education, and marriage in early 19th-century England.",
+    "cover": "https://www.gutenberg.org/cache/epub/1342/pg1342.cover.medium.jpg"
+  },
+  {
+    "id": "sanguo-yanyi",
+    "title": "三国演义",
+    "authors": ["罗贯中"],
+    "year": 1522,
+    "language": "zh",
+    "tags": ["历史","长篇","古典"],
+    "isbn": "",
+    "link": "https://www.gutenberg.org/ebooks/23962",
+    "description": "以东汉末年到西晋初年为背景，描写三国时代群雄逐鹿及魏蜀吴三国兴亡过程的历史演义小说。"
+  },
+  {
+    "id": "les-miserables",
+    "title": "Les Misérables",
+    "authors": ["Victor Hugo"],
+    "year": 1862,
+    "language": "fr",
+    "tags": ["classic","society","novel"],
+    "isbn": "9782070409182",
+    "link": "https://www.gutenberg.org/ebooks/135",
+    "description": "An epic historical novel that examines the nature of law and grace, and expounds upon the history of France, architecture and urban design, politics, moral philosophy, antimonarchism, justice, religion, and the types and nature of romantic and familial love.",
+    "cover": "https://www.gutenberg.org/cache/epub/135/pg135.cover.medium.jpg"
+  },
+  {
+    "id": "dao-de-jing",
+    "title": "道德经",
+    "authors": ["老子"],
+    "year": -400,
+    "language": "zh",
+    "tags": ["哲学","经典","思想"],
+    "link": "https://www.gutenberg.org/ebooks/216",
+    "description": "中国先秦时期哲学著作，道家学派的经典，被认为是了解中国古代哲学思想的重要文献。"
+  }
+]

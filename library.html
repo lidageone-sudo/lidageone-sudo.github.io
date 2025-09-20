@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>我的藏书 | 旧版列表</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <p style="padding:10px;font-size:12px;background:#fffae0;border-bottom:1px solid #e2d9b0">这是旧版藏书页面（已保留为 library.html）。新首页为阅读器。</p>
+  <!-- 原 index 内容保持 -->
+  <header class="site-header">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">📚</span>
+      <h1>我的藏书</h1>
+    </div>
+    <div class="controls">
+      <input id="searchInput" type="search" placeholder="搜索 标题 / 作者 / 标签" aria-label="搜索" />
+      <select id="sortSelect" aria-label="排序">
+        <option value="title">标题</option>
+        <option value="year">年份(新→旧)</option>
+        <option value="author">作者</option>
+      </select>
+      <button id="toggleFavorites" class="btn" aria-pressed="false" title="只看收藏">★ 收藏</button>
+      <button id="themeToggle" class="btn" title="切换主题">🌓</button>
+      <a href="index.html" class="btn" title="阅读器">阅读器</a>
+    </div>
+  </header>
+  <nav id="tagBar" class="tag-bar" aria-label="标签过滤"></nav>
+  <main class="layout">
+    <section id="bookList" aria-live="polite" class="book-list" aria-label="书籍列表">
+      <div class="empty-hint" hidden>没有匹配的书籍。</div>
+    </section>
+    <aside id="detailPanel" class="detail-panel" aria-label="书籍详情" hidden>
+      <button id="closeDetail" class="close-btn" aria-label="关闭详情">×</button>
+      <div class="detail-content" id="detailContent" tabindex="-1"></div>
+    </aside>
+  </main>
+  <footer class="site-footer">
+    <p>数据文件: <code>data/books.json</code> · 收藏保存在浏览器本地 · <a href="#" id="exportFavorites">导出收藏</a></p>
+    <p>© <span id="yearSpan"></span> 我的藏书 · 公共领域与合法引用，仅供学习分享。</p>
+  </footer>
+  <template id="bookCardTemplate">
+    <article class="book-card" data-id="">
+      <div class="cover-wrapper"><img loading="lazy" alt="封面" class="cover" /></div>
+      <div class="info">
+        <h3 class="title"></h3>
+        <p class="authors"></p>
+        <p class="meta"></p>
+        <div class="tags"></div>
+      </div>
+      <button class="fav-btn" title="收藏">☆</button>
+    </article>
+  </template>
+  <script src="assets/js/app.js" type="module"></script>
+</body>
+</html>

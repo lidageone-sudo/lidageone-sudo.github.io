@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>复古阅读器 Retro Reader</title>
+  <meta name="description" content="iPhone 4s 风格拟物化本地电子书阅读器" />
+  <link rel="stylesheet" href="assets/css/reader.css" />
+</head>
+<body>
+  <div class="phone-frame">
+    <div class="status-bar">
+      <span class="sb-time" id="sbTime"></span>
+      <span class="sb-battery" title="模拟电量">🔋95%</span>
+    </div>
+    <header class="leather-bar">
+      <h1 class="app-title">书架</h1>
+      <div class="toolbar">
+        <label class="file-btn">导入
+          <input type="file" id="fileInput" accept=".txt,.epub" />
+        </label>
+        <button id="toggleShelf" class="tbtn" aria-pressed="true">书架</button>
+        <button id="toggleReader" class="tbtn" aria-pressed="false">阅读</button>
+        <button id="themeSwitch" class="tbtn" title="主题">主题</button>
+      </div>
+    </header>
+    <main class="screen">
+      <section id="shelfView" class="shelf-view active">
+        <div id="shelfGrid" class="shelf-grid"></div>
+        <div class="hint">点击“导入”选择 txt / epub（文件仅在本地浏览器中处理，不会上传）。</div>
+      </section>
+      <section id="readerView" class="reader-view" hidden>
+        <div class="page-toolbar">
+          <button id="prevChapter" class="mini">◀</button>
+          <select id="chapterSelect"></select>
+          <button id="nextChapter" class="mini">▶</button>
+          <button id="fontDec" class="mini">A-</button>
+          <span class="font-size-ind" id="fontSizeInd">16</span>
+          <button id="fontInc" class="mini">A+</button>
+          <button id="resetPos" class="mini" title="回到顶部">↺</button>
+        </div>
+        <div id="pageContainer" class="page-container" tabindex="0"></div>
+        <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+      </section>
+    </main>
+    <footer class="home-btn-bar">
+      <button class="home-btn" id="homeBtn" aria-label="返回书架"></button>
+    </footer>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
+  <script src="assets/js/reader.js" type="module"></script>
+</body>
+</html><!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>我的藏书 | Personal Library</title>
+  <meta name="description" content="个人 GitHub Pages 藏书分享网站" />
+  <link rel="preload" href="assets/css/style.css" as="style" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">📚</span>
+      <h1>我的藏书</h1>
+    </div>
+    <div class="controls">
+      <input id="searchInput" type="search" placeholder="搜索 标题 / 作者 / 标签" aria-label="搜索" />
+      <select id="sortSelect" aria-label="排序">
+        <option value="title">标题</option>
+        <option value="year">年份(新→旧)</option>
+        <option value="author">作者</option>
+      </select>
+      <button id="toggleFavorites" class="btn" aria-pressed="false" title="只看收藏">★ 收藏</button>
+      <button id="themeToggle" class="btn" title="切换主题">🌓</button>
+    </div>
+  </header>
+
+  <nav id="tagBar" class="tag-bar" aria-label="标签过滤"></nav>
+
+  <main class="layout">
+    <section id="bookList" aria-live="polite" class="book-list" aria-label="书籍列表">
+      <div class="empty-hint" hidden>没有匹配的书籍。</div>
+    </section>
+
+    <aside id="detailPanel" class="detail-panel" aria-label="书籍详情" hidden>
+      <button id="closeDetail" class="close-btn" aria-label="关闭详情">×</button>
+      <div class="detail-content" id="detailContent" tabindex="-1"></div>
+    </aside>
+  </main>
+
+  <footer class="site-footer">
+    <p>数据文件: <code>data/books.json</code> · 收藏保存在浏览器本地 · <a href="#" id="exportFavorites">导出收藏</a></p>
+    <p>© <span id="yearSpan"></span> 我的藏书 · 公共领域与合法引用，仅供学习分享。</p>
+  </footer>
+
+  <template id="bookCardTemplate">
+    <article class="book-card" data-id="">
+      <div class="cover-wrapper"><img loading="lazy" alt="封面" class="cover" /></div>
+      <div class="info">
+        <h3 class="title"></h3>
+        <p class="authors"></p>
+        <p class="meta"></p>
+        <div class="tags"></div>
+      </div>
+      <button class="fav-btn" title="收藏">☆</button>
+    </article>
+  </template>
+
+  <script src="assets/js/app.js" type="module"></script>
+</body>
+</html>

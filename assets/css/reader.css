@@ -1,0 +1,59 @@
+/* Retro skeuomorphic reader inspired by iPhone 4s era */
+:root{
+  --leather:#5b3a23;--leather-dark:#3d2617;--paper:#f8f1e3;--paper-alt:#f1e7d4;--ink:#2d2418;--gold:#d9c6a3;--shadow:0 2px 6px rgba(0,0,0,.35);--radius:14px;
+  --screen-bg:#d9c6a3;--accent:#8b5e2b;--accent2:#b0792c;--btn:#fffef9;--btn-border:#c9b9a0;--reader-width:92%;
+  --trans: .25s cubic-bezier(.4,.0,.2,1);
+}
+[data-theme=dark]{
+  --leather:#3a3f46;--leather-dark:#24282d;--paper:#262a2f;--paper-alt:#31373e;--ink:#f4f6f8;--gold:#606b74;--screen-bg:#1d2023;--accent:#8c6239;--accent2:#b8834f;--btn:#353b42;--btn-border:#4a525b;
+}
+[data-theme=sepia]{
+  --paper:#f5ecd8;--paper-alt:#efe2c4;--ink:#3a2d18;--screen-bg:#e1d2b4;--accent:#946f3d;--accent2:#c09257;
+}
+html,body{height:100%;margin:0;font-family: 'Helvetica Neue','Segoe UI',Arial,sans-serif;background:radial-gradient(circle at 50% 20%,#60412a,#2f1d12);color:var(--ink);}
+body{display:flex;align-items:center;justify-content:center;padding:10px;}
+.phone-frame{width:360px;max-width:100%;height:720px;max-height:100%;background:linear-gradient(#6d472d,#4d311f);border:5px solid #2a1a11;border-radius:38px;box-shadow:0 10px 30px rgba(0,0,0,.6),0 0 0 4px #1a120c,0 0 0 6px #503321;position:relative;display:flex;flex-direction:column;overflow:hidden;font-size:14px}
+.status-bar{height:26px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;font-size:11px;color:#f5e9d7;letter-spacing:.5px;text-shadow:0 1px 1px #000;font-weight:600;background:linear-gradient(#3a2416,#24160d);box-shadow:inset 0 -1px 0 rgba(255,255,255,.15)}
+.leather-bar{background:linear-gradient(#6b442b,#50331f);padding:6px 10px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 4px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.2);color:#f8ecdd}
+[data-theme=dark] .leather-bar{background:linear-gradient(#444a51,#32373d)}
+[data-theme=sepia] .leather-bar{background:linear-gradient(#7a5536,#5a3b22)}
+.app-title{font-size:18px;margin:0;font-weight:600;letter-spacing:.5px;text-shadow:0 1px 1px rgba(0,0,0,.55)}
+.toolbar{display:flex;gap:6px;align-items:center}
+.file-btn{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(#faf8f3,#d9cdbb);color:#4d3722;padding:4px 10px;border-radius:18px;font-size:12px;border:1px solid #b9aa95;cursor:pointer;font-weight:600;box-shadow:0 2px 3px rgba(0,0,0,.35),inset 0 1px 0 #fff}
+.file-btn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.tbtn{background:linear-gradient(#f7f4ee,#d8ccbb);border:1px solid #b9aa95;border-radius:14px;padding:4px 10px;font-size:12px;color:#4d3722;cursor:pointer;font-weight:600;box-shadow:0 2px 3px rgba(0,0,0,.35),inset 0 1px 0 #fff;transition:var(--trans);}
+.tbtn[aria-pressed=true],.tbtn:active{background:linear-gradient(#d8ccbb,#f7f4ee)}
+.tbtn:hover{filter:brightness(1.03)}
+.screen{flex:1;position:relative;background:linear-gradient(#d9c6a3,#c7b08a);display:flex;flex-direction:column;overflow:hidden}
+[data-theme=dark] .screen{background:linear-gradient(#202428,#181b1f)}
+[data-theme=sepia] .screen{background:linear-gradient(#e3d4b7,#d2bea0)}
+.shelf-view{padding:14px;display:none;flex-direction:column;overflow:auto}
+.shelf-view.active{display:flex}
+.shelf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:14px;margin-bottom:14px}
+.book-slot{background:linear-gradient(#f5ecd8,#e8dbc3);border:1px solid #d2c3ac;border-radius:10px;box-shadow:0 2px 4px rgba(0,0,0,.25),inset 0 1px 0 #fff;display:flex;flex-direction:column;align-items:center;padding:6px;cursor:pointer;position:relative;font-size:11px;text-align:center}
+.book-slot .title{font-weight:600;margin-top:4px;line-height:1.1}
+.book-slot .fmt{font-size:10px;opacity:.65}
+.book-slot:hover{filter:brightness(1.05)}
+.reader-view{display:flex;flex-direction:column;height:100%}
+.page-toolbar{display:flex;align-items:center;gap:6px;padding:6px 10px;background:linear-gradient(#ede4d5,#d8c9b3);border-bottom:1px solid #c9b9a0;box-shadow:inset 0 1px 0 #fff}
+[data-theme=dark] .page-toolbar{background:linear-gradient(#2c3136,#252a2e);border-color:#363d44}
+[data-theme=sepia] .page-toolbar{background:linear-gradient(#efe1cc,#d9c7ab)}
+.page-toolbar .mini{background:linear-gradient(#faf8f3,#d9cdbb);border:1px solid #b9aa95;border-radius:10px;padding:3px 8px;font-size:11px;cursor:pointer;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.3),inset 0 1px 0 #fff}
+.page-toolbar select{flex:1;background:linear-gradient(#faf8f3,#d9cdbb);border:1px solid #b9aa95;border-radius:10px;padding:3px 6px;font-size:12px}
+.page-container{flex:1;overflow:auto;padding:18px 22px;font-size:16px;line-height:1.62;font-family: "Times New Roman",serif;background:var(--paper);background-image:repeating-linear-gradient(#f3e8d6 0 2px,#f3e8d600 2px 34px);box-shadow:inset 0 0 4px rgba(0,0,0,.35);border-top:1px solid #c9b9a0;border-bottom:1px solid #c9b9a0;scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+[data-theme=dark] .page-container{background:var(--paper);background-image:none}
+[data-theme=sepia] .page-container{background:var(--paper);}
+.page-container p{margin:0 0 1em;text-indent:2em}
+.page-container h2,.page-container h3{margin:1.6em 0 .8em;text-indent:0;line-height:1.3}
+.progress-bar{height:6px;background:rgba(0,0,0,.15);position:relative}
+.progress-fill{height:100%;width:0;background:linear-gradient(90deg,#b0792c,#e0b15d)}
+.home-btn-bar{height:54px;display:flex;align-items:center;justify-content:center;background:linear-gradient(#3d281a,#24160d);box-shadow:inset 0 1px 0 rgba(255,255,255,.15)}
+.home-btn{width:58px;height:34px;border-radius:22px;border:2px solid #ddbfa0;background:radial-gradient(circle at 50% 30%,#f5e2c9,#d1b291);cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.5),inset 0 1px 0 #fff}
+.hint{font-size:12px;opacity:.7;text-align:center}
+.font-size-ind{min-width:24px;text-align:center;font-size:12px}
+/* Animations */
+.fade-in{animation:fade .4s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+::-webkit-scrollbar{width:10px}::-webkit-scrollbar-thumb{background:#c8b8a3;border-radius:6px}body[data-theme=dark] ::-webkit-scrollbar-thumb{background:#444}
+@media (max-height:760px){.phone-frame{height:640px}}
+@media (max-width:400px){.phone-frame{width:100%;height:100%;border-radius:0}}
