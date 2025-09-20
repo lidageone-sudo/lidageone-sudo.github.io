@@ -1,59 +1,59 @@
-# 个人藏书网站 (GitHub Pages)
+# Retro Reader 📱📖
 
-一个纯前端静态站点：展示书籍、搜索、标签过滤、收藏、本地导出收藏数据，适合托管到 GitHub Pages。
+一个纯前端、本地文件读取的复古（iPhone 4s 拟物风）电子书阅读器。支持导入 **TXT / EPUB**，不上传服务器，全部处理在浏览器内。适合直接托管在 GitHub Pages / 任何静态空间。
 
-## 功能
-- 书籍网格展示（`data/books.json`）
-- 即时搜索（标题 / 作者 / 标签）
-- 标签多选过滤（AND 逻辑）
-- 排序：标题 / 年份 / 作者
-- 书籍详情：Hash 路由 `#book/<id>` 可直接分享
-- 收藏：本地存储（localStorage），支持“只看收藏”
-- 导出收藏：生成 `favorites.json`
-- 主题切换：深/浅色
-- 响应式 + 键盘可访问性（Esc 关闭详情、Tab 导航）
+## 主要特性
+- 本地导入：选择 txt / epub 文件即时阅读，文件内容不会被上传。
+- TXT 自动分章：基于常见章节标题（“第X章”“Chapter N”“Part N”）解析；未匹配章节会合并到上一个章节。
+- EPUB 渲染：使用 [epub.js](https://github.com/futurepress/epub.js) 生成分页视图与目录。
+- 三主题循环：`light → sepia → dark`，模拟旧纸质与夜间阅读。
+- 字号调节：12–36px，自动持久化。
+- 进度记忆：TXT 保存（章节 index + 滚动偏移）；EPUB 保存 CFI；刷新回到上次阅读位置。
+- 键盘快捷键：←/→ 切换章节，Esc 返回书架。
+- 复古 UI：皮革标题栏、拟物按钮、纸张纹理、古早状态条时间与电量模拟。
 
-## 使用
-1. 克隆或 Fork 本仓库。
-2. 修改 `data/books.json` 添加你的书籍条目。
-3. 推送后在仓库 Settings -> Pages 启用（分支选择 `main` / 根目录）。
-4. 访问 `https://<username>.github.io/<repo>/`。
+## 使用方法
+1. 打开站点主页（`index.html`）。
+2. 点击 “导入” 按钮选择本地 txt 或 epub 文件，可多选。
+3. 书架中点击某本书进入阅读；再次点击底部 Home（椭圆）或“书架”返回。
+4. 章节下拉快速跳转；A-/A+ 调整字号；“↺” 回到本章顶部 / 重新显示首章。
+5. 主题按钮循环切换主题，偏好会保存。
 
-## 数据格式示例
-```json
-{
-  "id": "unique-id",
-  "title": "书名",
-  "authors": ["作者A", "作者B"],
-  "year": 2024,
-  "language": "zh",
-  "tags": ["技术", "编程"],
-  "isbn": "978xxxxxxxxxx",
-  "link": "https://example.com/read",
-  "description": "简介文本（支持换行）",
-  "cover": "https://.../cover.jpg"
-}
+## 项目结构
 ```
-`id` 应唯一（用于 hash 链接和收藏）；`cover` 可为空；年份可为负表示公元前。
+index.html           # 主页面（阅读器）
+assets/css/reader.css
+assets/js/reader.js
+README.md
+```
 
-## 自定义
-- 样式：编辑 `assets/css/style.css`
-- 逻辑：编辑 `assets/js/app.js`
-- 添加字段：在 JSON 中加字段并在渲染处补充。
+## 安全与隐私
+- 所有文件只存在于内存 File 对象中；未调用任何上传接口。
+- 仅使用 localStorage 保存：主题、字号、阅读进度（按文件名+大小派生的 id）。
+- 清理浏览器数据或更改文件名/大小会重置进度。
 
-## 收藏同步思路（可选）
-- 将导出的 `favorites.json` 重新整合进主 JSON 或做单独列表。
-- 若需多设备同步，可改成生成 Gist 方案（需要后端或 GitHub API token）。
+## TXT 分章规则
+默认正则（简化说明）：
+```
+^(第[\d一二三四五六七八九十百千]+[章节回卷])|(Chapter\s+\d+)|(Part\s+\d+)
+```
+满足：
+1. 行匹配标题模式
+2. 上一章节累积字数达到阈值（避免误切）
 
-## 许可与版权
-示例数据包含公共领域作品（Project Gutenberg 等）。请确保你添加的书籍元数据和封面符合版权/使用条款。本项目代码 MIT License。
+可在 `reader.js` 内调整解析逻辑以适配不同格式小说。
 
-## 后续扩展建议
-- PWA: 添加 manifest.json + service worker 缓存
-- 搜索评分/高亮：对命中字段加权
-- Markdown 描述：引入 marked.js 解析
-- 分页或无限滚动
-- JSON Schema 校验 (AJV) + GitHub Actions 自动检查
+## 可扩展方向
+- PWA：添加 `manifest.json` + Service Worker 本地缓存框架资源。
+- 批注/高亮：Range + 序列化偏移存储。
+- 分页（TXT）：按视口高度分割为虚拟“页”，支持左右翻页动画。
+- 目录编辑：允许手动合并/拆分章节。
+- 云同步：使用 WebDAV / GitHub Gist 保存进度（需用户 Token）。
 
----
+## 依赖
+- epub.js（CDN 引入），其他所有逻辑原生实现。无构建步骤。
+
+## 许可证
 MIT © 2025
+
+> 注意：请确保你导入的电子书符合版权法规，仅供个人学习与研究。本项目不提供任何受版权保护内容。 
