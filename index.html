@@ -2,6 +2,58 @@
 <html lang="zh-CN" data-theme="light">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>复古阅读器 Retro Reader</title>
+  <meta name="description" content="iPhone 4s 风格拟物化本地电子书阅读器" />
+  <link rel="stylesheet" href="assets/css/reader.css" />
+</head>
+<body>
+  <div class="phone-frame">
+    <div class="status-bar">
+      <span class="sb-time" id="sbTime"></span>
+      <span class="sb-battery" title="模拟电量">🔋95%</span>
+    </div>
+    <header class="leather-bar">
+      <h1 class="app-title">书架</h1>
+      <div class="toolbar">
+        <label class="file-btn">导入
+          <input type="file" id="fileInput" accept=".txt,.epub" />
+        </label>
+        <button id="toggleShelf" class="tbtn" aria-pressed="true">书架</button>
+        <button id="toggleReader" class="tbtn" aria-pressed="false">阅读</button>
+        <button id="themeSwitch" class="tbtn" title="主题">主题</button>
+      </div>
+    </header>
+    <main class="screen">
+      <section id="shelfView" class="shelf-view active">
+        <div id="shelfGrid" class="shelf-grid"></div>
+        <div class="hint">点击“导入”选择 txt / epub（文件仅在本地浏览器中处理，不会上传）。</div>
+      </section>
+      <section id="readerView" class="reader-view" hidden>
+        <div class="page-toolbar">
+          <button id="prevChapter" class="mini">◀</button>
+          <select id="chapterSelect"></select>
+          <button id="nextChapter" class="mini">▶</button>
+          <button id="fontDec" class="mini">A-</button>
+          <span class="font-size-ind" id="fontSizeInd">16</span>
+          <button id="fontInc" class="mini">A+</button>
+          <button id="resetPos" class="mini" title="回到顶部">↺</button>
+        </div>
+        <div id="pageContainer" class="page-container" tabindex="0"></div>
+        <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+      </section>
+    </main>
+    <footer class="home-btn-bar">
+      <button class="home-btn" id="homeBtn" aria-label="返回书架"></button>
+    </footer>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
+  <script src="assets/js/reader.js" type="module"></script>
+</body>
+</html><!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>我的藏书 | Personal Library</title>
   <meta name="description" content="个人 GitHub Pages 藏书分享网站" />
